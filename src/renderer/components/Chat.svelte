@@ -55,7 +55,18 @@
       })
 
       if (result.success) {
-        messages = [...messages, { role: 'assistant', content: result.response }]
+        const assistantMessage = { role: 'assistant', content: result.response }
+        messages = [...messages, assistantMessage]
+        
+        // Add tool call messages if any tools were called
+        if (result.toolCalls && result.toolCalls.length > 0) {
+          for (const toolCall of result.toolCalls) {
+            messages = [...messages, {
+              role: 'assistant',
+              content: `🔧 Tool: ${toolCall.toolName}\nInput: ${JSON.stringify(toolCall.input, null, 2)}`
+            }]
+          }
+        }
       } else {
         error = result.error
         messages = messages.slice(0, -1)

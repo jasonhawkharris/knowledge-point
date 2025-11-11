@@ -5,18 +5,20 @@
   "main": "dist/main/index.js",
   "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development concurrently \"npm run vite\" \"npm run electron-dev\" \"npm run build:main\"",
+    "dev": "NODE_ENV=development concurrently \"npm run vite\" \"npm run electron-dev\" \"npm run watch:main\"",
     "vite": "vite",
-    "build:main": "npm run build:preload && tsc src/main/index.ts src/main/file-system.ts src/main/utils.ts --outDir dist/main --module esnext --target es2020 --moduleResolution node --allowSyntheticDefaultImports --watch",
+    "watch:main": "npm run build:preload && tsc -p tsconfig.main.json --watch",
+    "build:main": "tsc -p tsconfig.main.json",
     "build:preload": "tsc src/main/preload.ts --outDir dist/main --module commonjs --target es2020 --moduleResolution node --allowSyntheticDefaultImports",
     "electron-dev": "wait-on http://localhost:5173 && electron .",
-    "build": "vite build && tsc src/main/*.ts --outDir dist/main --module esnext --target es2020 --moduleResolution node && electron-builder",
+    "build": "vite build && npm run build:preload && npm run build:main && electron-builder",
     "build:vite": "vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "openai": "^4.52.0"
+    "@openrouter/ai-sdk-provider": "^1.2.1",
+    "ai": "^5.0.90"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.0.3",

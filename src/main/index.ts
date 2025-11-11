@@ -3,13 +3,30 @@ import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { isDev } from './utils.js'
-import { getDirectoryTree } from './file-system.js'
+import { getDirectoryTree, type FileNode } from './file-system.js'
 import { setApiKey, hasApiKey, sendMessage, readFiles } from './ai-client.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 let mainWindow: BrowserWindow | null = null
+let importedFilePaths = new Set<string>()
+let importedRootPaths: string[] = []
+
+function normalizeFilePath(filePath: string): string {
+  return path.resolve(filePath)
+}
+
+function collectFilePaths(node: FileNode | null, acc: Set<string>) {
+  if (!node) return
+
+  if (node.isDirectory) {
+    node.children?.forEach((child) => collectFilePaths(child, acc))
+    return
+  }
+
+  acc.add(normalizeFilePath(node.path))
+}
 
 function createWindow() {
   const preloadPath = path.join(__dirname, 'preload.js')
@@ -74,6 +91,9 @@ ipcMain.handle('select-directory', async () => {
 
   const dirPath = result.filePaths[0]
   const tree = await getDirectoryTree(dirPath)
+  importedFilePaths = new Set<string>()
+  importedRootPaths = [normalizeFilePath(dirPath)]
+  collectFilePaths(tree, importedFilePaths)
   return tree
 })
 
@@ -100,9 +120,25 @@ ipcMain.handle('send-message', async (_, params: {
       throw new Error('API key not configured')
     }
 
-    const files = await readFiles(params.selectedFiles)
-    const response = await sendMessage(params.message, files, params.conversationHistory)
-    return { success: true, response }
+    const authorizedSelection = params.selectedFiles
+      .map((filePath) => normalizeFilePath(filePath))
+      .filter((filePath) => importedFilePaths.has(filePath))
+
+    if (authorizedSelection.length !== params.selectedFiles.length) {
+      console.warn('Filtered unauthorized file paths from selection')
+    }
+
+    const files = await readFiles(authorizedSelection)
+    const result = await sendMessage(
+      params.message,
+      files,
+      params.conversationHistory,
+      {
+        allowedFilePaths: Array.from(importedFilePaths),
+        importedRootPaths,
+      }
+    )
+    return { success: true, response: result.text, toolCalls: result.toolCalls }
   } catch (error) {
     return { success: false, error: (error as Error).message }
   }

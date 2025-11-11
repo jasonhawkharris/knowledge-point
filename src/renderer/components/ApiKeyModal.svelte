@@ -27,8 +27,8 @@
 <div class="modal-overlay">
   <div class="modal">
     <div class="modal-header">
-      <h2>Configure OpenAI API Key</h2>
-      <p>Enter your OpenAI API key to get started</p>
+      <h2>Configure OpenRouter API Key</h2>
+      <p>Enter your OpenRouter API key to get started</p>
     </div>
 
     <div class="modal-content">
@@ -47,8 +47,8 @@
           autofocus
         />
         <p class="help-text">
-          Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank"
-            >OpenAI's API Keys page</a
+          Get your API key from <a href="https://openrouter.ai/keys" target="_blank"
+            >OpenRouter's API Keys page</a
           >
         </p>
       </div>

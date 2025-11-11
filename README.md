@@ -56,7 +56,7 @@ src/
 
 1. Implement file browser with `dialog.showOpenDialog()`
 2. Add file tree rendering with recursive directory traversal
-3. Connect to OpenAI API
+3. Connect to OpenRouter API
 4. Implement conversation persistence
 5. Build production bundle
 
